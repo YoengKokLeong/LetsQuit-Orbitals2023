@@ -1,11 +1,13 @@
-import {AppBar, Toolbar, Typography, Button, Stack, Container, Box, TextField, CssBaseline} from '@mui/material';
+import {AppBar, Toolbar, Typography, Button, Stack, Container, Box, TextField, CssBaseline, Alert, AlertTitle, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {useNavigate} from "react-router-dom";
 import {db} from "../firebase";
-import {collection, getDocs, addDoc, doc, deleteDoc, updateDoc, query, onSnapshot} from "firebase/firestore";
+import {collection, getDocs, addDoc, doc, updateDoc, query, onSnapshot} from "firebase/firestore";
 import {useState, useEffect} from "react";
 import globe from "../images/globe.gif"
 import Archer from "../images/Archer.gif"
+import {auth} from '../firebase';
+var today = new Date()
 
 const theme = createTheme({
     palette: {
@@ -17,6 +19,14 @@ const theme = createTheme({
 
 export default function Social() {
 const navigate = useNavigate();
+
+const email = auth.currentUser?.email;
+const email_info = auth.currentUser?.email + "_info";
+const [userr,setUserr] = useState({});
+const docRef = doc(db, "user_info", email_info)
+onSnapshot(docRef, (doc) => {
+  setUserr({email_info,...doc.data()})
+})
 
 //set up react router features to switch pages
 const goHome = () => {
@@ -42,29 +52,41 @@ const [newRptname, setNewRptname] = useState("");
 
 const [users,setUsers] = useState([]);
 const usersCollectionRef = collection(db, "users");
-const [newName, setNewName] = useState("");
-const [newDate, setNewDate] = useState("");
 const [newHelp, setNewHelp] = useState("");
 const [newReply, setNewReply] = useState("");
-const [newSavior, setNewSavior] = useState("");
+const [error, setError] = useState(false);
 
 const createUser =  async () => {
-  await addDoc(usersCollectionRef, {name: newName, date: newDate, help: newHelp, reply: newReply, savior: newSavior});
+  if (newHelp === "")
+  {
+    setError(true);
+  } else {
+  await addDoc(usersCollectionRef, {name: userr.name, date: today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate(), help: newHelp, reply: "", savior: "", source: email});
+  }
 };
+
+const handleErrorDialogClose = () => {
+  setError(false);
+}
 
 const createReport =  async () => {
+  if (newRptname === "")
+  {
+    setError(true);
+  } else {
     await addDoc(reportsCollectionRef, {Rptname: newRptname});
+  }
 };
-
-const deleteUser = async (id) => {
-  const userDoc = doc(db, "users", id);
-  await deleteDoc(userDoc);
-}
 
 const updateUser = async (id, reply, savior) => {
     const userDoc = doc(db, "users", id);
-    const newFields = {reply: newReply, savior: newSavior}
+    const newFields = {reply: newReply, savior: userr.name}
+    if (newReply === "")
+  {
+    setError(true);
+  } else {
     await updateDoc(userDoc, newFields);
+  }
   };
 
 useEffect(() => {
@@ -119,8 +141,6 @@ return (
       <Box sx={{border: 2, borderColor: 'primary.main', p: 2, backgroundColor: "white"}}>
         <Stack direction = "column" marginBottom={1}>
             <Typography> <strong>Having difficulties staying on track? Drop your worries below and seek advice from fellow Quitters! </strong> </Typography>
-            <TextField size = "small" placeholder = "Name" onChange = {(event) => {setNewName(event.target.value)}} />
-            <TextField size = "small"  placeholder = "Date" onChange = {(event) => {setNewDate(event.target.value)}} />
             <TextField size = "small"  placeholder = "What problems are you facing?..." onChange = {(event) => {setNewHelp(event.target.value)}} />
         </Stack>
         <Button size = "small" variant = "contained" onClick = {createUser} > Share</Button>
@@ -132,16 +152,14 @@ return (
                 <div>
                     <Box>
                         <Box sx={{border: 2, borderColor: 'primary.main', p: 2, backgroundColor: "white"}}>
-                            <Typography> <strong>Name: </strong> {user.name} </Typography>
+                        <Typography> <strong>Name: </strong> {user.name} </Typography>
                             <Typography> <strong>Date: </strong> {user.date} </Typography>
                             <Typography marginBottom={1}> <strong>Help: </strong> {user.help} </Typography>
-                            <Button variant = "contained" color = "warning" size = "small"  onClick = {() => {deleteUser(user.id)}}> Delete entry </Button>
                         </Box>
                         <Box sx={{border: 2, borderColor: 'primary.main', p: 2, backgroundColor: "white"}}>
                             <Typography> <strong>Name: </strong> {user.savior} </Typography>
                             <Typography> <strong>Reply: </strong> {user.reply} </Typography>
                             <Stack direction = "column" marginBottom={1} marginTop={1}>
-                                <TextField size = "small" placeholder = "Name..." onChange = {(event) => {setNewSavior(event.target.value)}} />
                                 <TextField size = "small" placeholder = "Advice..." onChange = {(event) => {setNewReply(event.target.value)}} />
                             </Stack>
                             <Button variant = "contained" color = "primary" size = "small" onClick = {() => {updateUser(user.id, user.reply, user.savior)}}> Share </Button>   
@@ -166,8 +184,25 @@ return (
     </Box>
     </Stack>
 
+    <Dialog
+        open={error}
+        keepMounted
+        onClose={handleErrorDialogClose}
+        aria-describedby="alert-dialog-slide-description" >
+        <DialogTitle><Alert severity="error"> <AlertTitle><strong>Your entry is empty!</strong>  </AlertTitle>
+            </Alert> 
+            </DialogTitle>
+        <DialogContent>
+        </DialogContent>
+        <DialogActions>
+          <Button variant = "contained" color = "error" onClick={handleErrorDialogClose}> Okay </Button>
+        </DialogActions>
+      </Dialog>
+
     </Container>
     </CssBaseline>
     </ThemeProvider>
+
+    
  );
 }
