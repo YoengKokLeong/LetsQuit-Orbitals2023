@@ -1,4 +1,4 @@
-import {AppBar, Toolbar, Typography, Button, Stack, Container, Box, CssBaseline, Popover} from '@mui/material';
+import {AppBar, Toolbar, Typography, Button, Stack, Container, Box, CssBaseline, Popover, Alert, AlertTitle, Dialog, DialogActions, DialogTitle} from '@mui/material';
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {useNavigate} from "react-router-dom";
 import wooden_sword from "../images/wooden_sword.webp"
@@ -12,6 +12,7 @@ import coinss from "../images/coinss.gif"
 import attack from "../images/attack.png"
 import Npc_trader from "../images/Npc_scamer.webp"
 import coming_soon from "../images/coming_soon.png"
+import grass_bg from "../images/grass_bg.jpg"
 import {db} from "../firebase";
 import {doc, onSnapshot, updateDoc} from "firebase/firestore";
 import {useState} from "react";
@@ -43,6 +44,11 @@ const goSocial = () => {
 const goHelp = () => {
   navigate("/Help")
 }
+
+const goInventory = () => {
+  navigate("/Inventory")
+}
+
  const email_info = auth.currentUser?.email + "_info";
  const email_shop = auth.currentUser?.email + "_shop";
  const [user,setUser] = useState({});
@@ -58,40 +64,84 @@ const shopDocRef = doc(db, "user_shop", email_shop)
     setUserShop({email_shop,...doc.data()})
  })
 
+ const[error, setError] = useState(false);
+ const handleErrorDialogClose = () => {
+  setError(false);
+}
+
  const woodenSwordBuy = () => {
+  if (user.coin < 20)
+  {
+    setError(true);
+  } else {
   updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 20, atk_dmg: user.atk_dmg + 2});
-  updateDoc(doc(db, "user_shop", email_shop), {item1: true});
+  updateDoc(doc(db, "user_shop", email_shop), {item1: true,
+  equipItem: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2Fweapons%2Fwooden_sword_new.jpg?alt=media&token=aa795b87-3a02-4621-9cd2-4f8524be0d5b"});
+  }
  }
  const knightSwordBuy = () => {
-  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 50, atk_dmg: user.atk_dmg -2 + 8});
+  if (user.coin < 50)
+  {
+    setError(true);
+  } else {
+  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 50, atk_dmg: user.atk_dmg + 8});
   updateDoc(doc(db, "user_shop", email_shop), {item2: true,
-  equipItem: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2Fweapons%2Fkatana_sword_knight.jpg?alt=media&token=ba159f7d-4088-4556-950a-bf6dd616ab63"});
+  equipItem: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2Fweapons%2Fkatana_sword_new.jpg?alt=media&token=d293f022-2925-4e1c-b405-b84fb1452301"});
+  }
  }
  const laserSwordBuy = () => {
-  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 100, atk_dmg: user.atk_dmg -8 +15});
+  if (user.coin < 100)
+  {
+    setError(true);
+  } else {
+  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 100, atk_dmg: user.atk_dmg +15});
   updateDoc(doc(db, "user_shop", email_shop), {item3: true, 
   equipItem: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2Fweapons%2Flaser_sword_knight.jpg?alt=media&token=cea60f6f-8741-4f58-b1e2-2ab9d13997b1"});
+  }
  }
+
  const buddyBuy = () => {
+  if (user.coin < 10)
+  {
+    setError(true);
+  } else {
   updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 10, atk_dmg: user.atk_dmg +2});
   updateDoc(doc(db, "user_shop", email_shop), {pet1: true,
   equipPet: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2FPet%2FPet_Buddy.webp?alt=media&token=e938505e-cdbf-4d1a-bf01-69c46a14234b"});
+  }
  }
+
  const chillyBuy = () => {
-  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 20, atk_dmg: user.atk_dmg -2 +4});
+  if (user.coin < 20)
+  {
+    setError(true);
+  } else {
+  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 20, atk_dmg: user.atk_dmg +4});
   updateDoc(doc(db, "user_shop", email_shop), {pet2: true,
   equipPet: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2FPet%2FPet_Chilly.webp?alt=media&token=101c5141-17a3-456a-bcab-d02b7f3e691d"});
- }
+  }
+}
+
  const hammBuy = () => {
-  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 40, atk_dmg: user.atk_dmg -4 +8});
+  if (user.coin < 40)
+  {
+    setError(true);
+  } else {
+  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 40, atk_dmg: user.atk_dmg +8});
   updateDoc(doc(db, "user_shop", email_shop), {pet3: true,
   equipPet: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2FPet%2FPet_Hamm.webp?alt=media&token=d86ee791-cd19-4693-924a-a4ac5500fe2e"});
+  }
  }
  const blueBuy = () => {
-  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 100, atk_dmg: user.atk_dmg -8 +15});
+  if (user.coin < 100)
+  {
+    setError(true);
+  } else {
+  updateDoc(doc(db, "user_info", email_info), {coin: user.coin - 100, atk_dmg: user.atk_dmg +15});
   updateDoc(doc(db, "user_shop", email_shop), {pet4: true,
   equipPet: "https://firebasestorage.googleapis.com/v0/b/letsquit-1b913.appspot.com/o/images%2FPet%2FPet_Blue.webp?alt=media&token=1dc1d5e4-a3de-470c-9e20-3312805e1c88"});
- }
+  }
+}
 
  const [anchorEl, setAnchorEl] = useState(null); //Wooden Sword popover
  const open = Boolean(anchorEl);
@@ -146,6 +196,9 @@ return(
             <Button color = "secondary" variant = "contained" size = "small" onClick ={goSocial}>
               Social
             </Button>
+            <Button color = "primary" variant = "contained" size = "small" onClick ={goInventory}>
+              Inventory
+            </Button>
             <Button color = "error" variant = "contained" size = "small" onClick ={goHelp}>
               Help
             </Button>
@@ -164,7 +217,7 @@ return(
       <Typography variant = "h5"> <strong><u> {user.name}</u> </strong></Typography>
       <Typography variant = "h5"> <img src= {coinss} width={35} height={35} alt= ""/> <strong> {user.coin} </strong>  </Typography>
       <Typography variant ="h5"> <img src= {attack} width={40} height={40} alt= ""/><strong> {user.atk_dmg} </strong></Typography>
-      <Box marginTop = {9} sx={{width: 105, height: 105, border: 2, borderColor: 'primary.main'}}>
+      <Box marginTop = {9} sx={{width: 105, height: 105, border: 2, borderColor: 'primary.main', backgroundImage: `url(${grass_bg})`,backgroundSize: "cover"}}>
       <img src= {userShop.equipPet} width={105} height={105} alt= ""/>
       </Box>
       </Stack>
@@ -402,6 +455,18 @@ return(
 
       </Stack>
       </Box>
+      <Dialog
+        open={error}
+        keepMounted
+        onClose={handleErrorDialogClose}
+        aria-describedby="alert-dialog-slide-description" >
+        <DialogTitle><Alert severity="warning"> <AlertTitle><strong>Insufficient coins to purchase!</strong>  </AlertTitle>
+            </Alert> 
+            </DialogTitle>
+        <DialogActions>
+          <Button variant = "contained" color = "primary" onClick={handleErrorDialogClose}> Okay </Button>
+        </DialogActions>
+      </Dialog>
       </Container>
       </CssBaseline>
     </ThemeProvider>
